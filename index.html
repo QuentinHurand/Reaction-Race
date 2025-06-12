@@ -1,120 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Casino Royale</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reaction Race</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: white;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
       text-align: center;
-      min-height: 100vh;
-      padding: 20px;
     }
-    h1 { font-size: 3rem; margin-bottom: 1rem; }
-    nav {
-      margin-bottom: 2rem;
+    h1 {
+      margin-top: 30px;
     }
-    nav button {
-      margin: 5px;
-      padding: 10px 20px;
-      background-color: #ffd700;
-      border: none;
-      font-size: 1rem;
-      cursor: pointer;
-      border-radius: 8px;
+    #ad-top, #ad-bottom {
+      margin: 20px auto;
+      width: 100%;
+      max-width: 728px;
+      height: 90px;
+      background-color: #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .game {
-      display: none;
-      margin-top: 2rem;
-    }
-    .visible {
-      display: block;
-    }
-    .slot-machine, .roulette, .blackjack {
-      padding: 2rem;
-      background-color: rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    button.play {
-      background-color: #28a745;
+    #game-area {
+      margin: 30px auto;
+      width: 300px;
+      height: 300px;
+      background-color: grey;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
       color: white;
-      padding: 12px 30px;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 8px;
-      margin-top: 1rem;
       cursor: pointer;
+      user-select: none;
     }
-    .result {
-      margin-top: 1rem;
-      font-size: 1.5rem;
+    #score {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    #start-btn {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin-top: 20px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>Casino Royale</h1>
-  <nav>
-    <button onclick="showGame('slot')">Slot Machine</button>
-    <button onclick="showGame('roulette')">Roulette</button>
-    <button onclick="showGame('blackjack')">Blackjack</button>
-  </nav>
+  <h1>Reaction Race</h1>
 
-  <div id="slot" class="game slot-machine">
-    <h2>Slot Machine</h2>
-    <div class="result" id="slotResult">🎰 🎰 🎰</div>
-    <button class="play" onclick="playSlot()">Spin</button>
+  <!-- 🟡 PUB EN HAUT -->
+  <div id="ad-top">
+    <!-- Script Google AdSense ici -->
+    <!-- Exemple : -->
+    <!--
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+         style="display:inline-block;width:728px;height:90px"
+         data-ad-client="ca-pub-XXXXXXXXXXXX"
+         data-ad-slot="1234567890"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    -->
+    <p>Zone pub (AdSense)</p>
   </div>
 
-  <div id="roulette" class="game roulette">
-    <h2>Roulette</h2>
-    <div class="result" id="rouletteResult">🎯 ?</div>
-    <button class="play" onclick="playRoulette()">Spin</button>
-  </div>
+  <button id="start-btn">Démarrer le jeu</button>
+  <div id="game-area">Clique ici quand c'est vert</div>
+  <div id="score"></div>
 
-  <div id="blackjack" class="game blackjack">
-    <h2>Blackjack (Simplified)</h2>
-    <div class="result" id="blackjackResult">🃏 Draw cards to 21</div>
-    <button class="play" onclick="playBlackjack()">Draw</button>
+  <!-- 🔻 PUB EN BAS -->
+  <div id="ad-bottom">
+    <p>Zone pub (AdSense)</p>
   </div>
 
   <script>
-    function showGame(id) {
-      document.querySelectorAll('.game').forEach(el => el.classList.remove('visible'));
-      document.getElementById(id).classList.add('visible');
+    const gameArea = document.getElementById('game-area');
+    const scoreDisplay = document.getElementById('score');
+    const startBtn = document.getElementById('start-btn');
+
+    let startTime = 0;
+    let timeoutID = null;
+    let playing = false;
+    let score = 0;
+
+    function startGame() {
+      score = 0;
+      scoreDisplay.textContent = '';
+      startBtn.style.display = 'none';
+      gameArea.style.backgroundColor = 'grey';
+      gameArea.textContent = 'Prépare-toi...';
+      playing = false;
+
+      const delay = Math.floor(Math.random() * 3000) + 2000; // 2 à 5 sec
+      timeoutID = setTimeout(() => {
+        gameArea.style.backgroundColor = 'green';
+        gameArea.textContent = 'CLIQUE !';
+        startTime = new Date().getTime();
+        playing = true;
+      }, delay);
     }
 
-    function playSlot() {
-      const symbols = ['🍒', '🍋', '🔔', '💎', '7️⃣'];
-      const r = () => symbols[Math.floor(Math.random() * symbols.length)];
-      document.getElementById('slotResult').textContent = `${r()} ${r()} ${r()}`;
+    function endGame(msg) {
+      playing = false;
+      clearTimeout(timeoutID);
+      gameArea.style.backgroundColor = 'grey';
+      gameArea.textContent = msg;
+      scoreDisplay.innerHTML = `<strong>Score :</strong> ${score} ms`;
+      startBtn.style.display = 'inline-block';
+
+      // Recharge pub à la fin
+      // (à condition que ton compte AdSense soit validé)
+      // (adsbygoogle = window.adsbygoogle || []).push({});
     }
 
-    function playRoulette() {
-      const number = Math.floor(Math.random() * 37);
-      const color = number === 0 ? 'green' : number % 2 === 0 ? 'black' : 'red';
-      document.getElementById('rouletteResult').textContent = `🎯 ${number} (${color})`;
-    }
-
-    let blackjackTotal = 0;
-    function playBlackjack() {
-      const card = Math.floor(Math.random() * 11) + 1;
-      blackjackTotal += card;
-      let msg = `You drew ${card}. Total: ${blackjackTotal}`;
-      if (blackjackTotal > 21) {
-        msg += ' — Bust!';
-        blackjackTotal = 0;
-      } else if (blackjackTotal === 21) {
-        msg += ' — Blackjack!';
-        blackjackTotal = 0;
+    gameArea.addEventListener('click', () => {
+      if (!playing) {
+        endGame("Trop tôt !");
+        return;
       }
-      document.getElementById('blackjackResult').textContent = msg;
-    }
+
+      const reactionTime = new Date().getTime() - startTime;
+      score = reactionTime;
+      endGame("Bravo !");
+    });
+
+    startBtn.addEventListener('click', startGame);
   </script>
 </body>
 </html>
