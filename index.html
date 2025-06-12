@@ -1,134 +1,109 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reaction Race</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reflex Game with Leaderboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    h1 {
-      margin-top: 30px;
-    }
-    #ad-top, #ad-bottom {
-      margin: 20px auto;
-      width: 100%;
-      max-width: 728px;
-      height: 90px;
-      background-color: #ddd;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #game-area {
-      margin: 30px auto;
-      width: 300px;
-      height: 300px;
-      background-color: grey;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
-      color: white;
-      cursor: pointer;
-      user-select: none;
-    }
-    #score {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-    #start-btn {
-      padding: 10px 20px;
-      font-size: 18px;
-      margin-top: 20px;
-      cursor: pointer;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    #gameZone { margin: 20px auto; border: 2px solid #000; width: 300px; height: 300px; position: relative; background: #f0f0f0; }
+    #target { width: 50px; height: 50px; background: red; position: absolute; border-radius: 50%; display: none; }
+    #leaderboard { margin-top: 40px; }
+    .ad-space { margin: 20px 0; padding: 10px; background: #ccc; }
   </style>
 </head>
 <body>
-  <h1>Reaction Race</h1>
+  <h1>⚡ Reflex Game</h1>
+  <div class="ad-space">[Votre publicité ici - haut]</div>
 
-  <!-- 🟡 PUB EN HAUT -->
-  <div id="ad-top">
-    <!-- Script Google AdSense ici -->
-    <!-- Exemple : -->
-    <!--
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle"
-         style="display:inline-block;width:728px;height:90px"
-         data-ad-client="ca-pub-XXXXXXXXXXXX"
-         data-ad-slot="1234567890"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    -->
-    <p>Zone pub (AdSense)</p>
+  <div>
+    <label for="pseudo">Entrez votre pseudo :</label>
+    <input type="text" id="pseudo" />
+    <button onclick="startGame()">Commencer</button>
   </div>
 
-  <button id="start-btn">Démarrer le jeu</button>
-  <div id="game-area">Clique ici quand c'est vert</div>
-  <div id="score"></div>
+  <div id="gameZone">
+    <div id="target"></div>
+  </div>
 
-  <!-- 🔻 PUB EN BAS -->
-  <div id="ad-bottom">
-    <p>Zone pub (AdSense)</p>
+  <h2>Score : <span id="score">0</span></h2>
+
+  <div class="ad-space">[Votre publicité ici - bas]</div>
+
+  <div id="leaderboard">
+    <h2>🏆 Top 100</h2>
+    <ol id="scoresList"></ol>
   </div>
 
   <script>
-    const gameArea = document.getElementById('game-area');
-    const scoreDisplay = document.getElementById('score');
-    const startBtn = document.getElementById('start-btn');
+    const supabaseUrl = 'https://YOUR-SUPABASE-URL.supabase.co';
+    const supabaseKey = 'YOUR-ANON-KEY';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    let startTime = 0;
-    let timeoutID = null;
-    let playing = false;
     let score = 0;
+    let gameStarted = false;
+    const target = document.getElementById('target');
 
-    function startGame() {
+    async function startGame() {
+      const pseudo = document.getElementById('pseudo').value.trim();
+      if (!pseudo) return alert("Veuillez entrer un pseudo.");
+
       score = 0;
-      scoreDisplay.textContent = '';
-      startBtn.style.display = 'none';
-      gameArea.style.backgroundColor = 'grey';
-      gameArea.textContent = 'Prépare-toi...';
-      playing = false;
+      document.getElementById('score').textContent = score;
+      gameStarted = true;
+      showTarget();
 
-      const delay = Math.floor(Math.random() * 3000) + 2000; // 2 à 5 sec
-      timeoutID = setTimeout(() => {
-        gameArea.style.backgroundColor = 'green';
-        gameArea.textContent = 'CLIQUE !';
-        startTime = new Date().getTime();
-        playing = true;
-      }, delay);
+      setTimeout(() => {
+        gameStarted = false;
+        target.style.display = 'none';
+        saveScore(pseudo, score);
+        loadLeaderboard();
+      }, 10000); // 10 sec
     }
 
-    function endGame(msg) {
-      playing = false;
-      clearTimeout(timeoutID);
-      gameArea.style.backgroundColor = 'grey';
-      gameArea.textContent = msg;
-      scoreDisplay.innerHTML = `<strong>Score :</strong> ${score} ms`;
-      startBtn.style.display = 'inline-block';
+    function showTarget() {
+      if (!gameStarted) return;
+      const x = Math.random() * 250;
+      const y = Math.random() * 250;
+      target.style.left = x + 'px';
+      target.style.top = y + 'px';
+      target.style.display = 'block';
 
-      // Recharge pub à la fin
-      // (à condition que ton compte AdSense soit validé)
-      // (adsbygoogle = window.adsbygoogle || []).push({});
+      setTimeout(() => {
+        target.style.display = 'none';
+        setTimeout(showTarget, Math.random() * 1000 + 500);
+      }, 700);
     }
 
-    gameArea.addEventListener('click', () => {
-      if (!playing) {
-        endGame("Trop tôt !");
-        return;
-      }
+    target.onclick = () => {
+      if (!gameStarted) return;
+      score++;
+      document.getElementById('score').textContent = score;
+    };
 
-      const reactionTime = new Date().getTime() - startTime;
-      score = reactionTime;
-      endGame("Bravo !");
-    });
+    async function saveScore(pseudo, score) {
+      const { error } = await supabase.from('scores').insert([{ pseudo, score }]);
+      if (error) console.error(error);
+    }
 
-    startBtn.addEventListener('click', startGame);
+    async function loadLeaderboard() {
+      const { data, error } = await supabase
+        .from('scores')
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(100);
+
+      const list = document.getElementById('scoresList');
+      list.innerHTML = '';
+      data.forEach((entry) => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.pseudo} — ${entry.score}`;
+        list.appendChild(li);
+      });
+    }
+
+    loadLeaderboard();
   </script>
 </body>
 </html>
