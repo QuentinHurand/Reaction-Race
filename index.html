@@ -3,170 +3,240 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Reflex Speed Game</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <title>Jeu de Réflexe vs Célébrités</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    #gameZone {
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
       margin: 20px auto;
-      border: 2px solid #000;
+      text-align: center;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    #gameZone {
+      position: relative;
       width: 300px;
       height: 300px;
-      position: relative;
-      background: #f0f0f0;
+      margin: 20px auto;
+      border: 3px solid #444;
+      background: #ddd;
+      border-radius: 10px;
       user-select: none;
     }
     #target {
       width: 50px;
       height: 50px;
+      background: red;
+      border-radius: 8px;
       position: absolute;
       display: none;
       cursor: pointer;
-      border-radius: 5px;
-      background-color: red;
+      transition: background-color 0.2s ease;
     }
-    #leaderboard { margin-top: 40px; }
-    .ad-space { margin: 20px 0; padding: 10px; background: #f9f9f9; min-height: 100px; }
+    #reactionTime {
+      font-size: 1.5em;
+      margin: 15px 0;
+    }
+    #leaderboard {
+      text-align: left;
+      max-height: 300px;
+      overflow-y: auto;
+      border-top: 2px solid #444;
+      margin-top: 30px;
+      padding-top: 10px;
+    }
+    #leaderboard ol {
+      padding-left: 20px;
+      margin: 0;
+    }
+    .your-rank {
+      font-weight: bold;
+      color: #007700;
+      background: #e0ffe0;
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+    .ad-space {
+      margin: 20px 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-style: italic;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
-  <h1>⚡ Jeu de Réflexe</h1>
+  <h1>⚡ Jeu de Réflexe vs Célébrités</h1>
 
-  <div class="ad-space">
-    <!-- Bloc publicitaire AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
-         data-ad-slot="1234567890"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <div class="ad-space" id="ad-top">
+    <!-- Ici tu pourras coller ton code Google AdSense ou autre -->
+    Publicité (top)
   </div>
 
   <div>
-    <label for="pseudo">Entrez votre pseudo :</label>
-    <input type="text" id="pseudo" />
-    <button onclick="startGame()">Commencer</button>
+    <button id="startBtn">Commencer le jeu</button>
   </div>
 
   <div id="gameZone">
     <div id="target"></div>
   </div>
 
-  <h2>Temps de réaction : <span id="reactionTime">-</span> ms</h2>
+  <div id="reactionTime">Temps de réaction : - ms</div>
 
-  <div class="ad-space">
-    <!-- Bloc publicitaire AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
-         data-ad-slot="0987654321"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <div class="ad-space" id="ad-bottom">
+    <!-- Ici aussi, place ta pub -->
+    Publicité (bas)
   </div>
 
   <div id="leaderboard">
-    <h2>🏆 Top 100 (les plus rapides)</h2>
+    <h2>🏆 Classement des célébrités & toi</h2>
     <ol id="scoresList"></ol>
   </div>
 
   <script>
-    const supabaseUrl = 'https://qwfzcqtwlgkkqqhskhdx.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZnpjcXR3bGdra3FxaHNraGR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MzM1MzYsImV4cCI6MjA2NTMwOTUzNn0.Mblc2bXxQUH1944ZS0tfiNb0qAEw35TrYSUQWSptrdU';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    // Liste fictive de célébrités / pilotes F1 avec leurs temps de réaction en ms
+    // Temps fictifs, plus petit = plus rapide
+    const celebrities = [
+      { name: "Lewis Hamilton (F1)", score: 180 },
+      { name: "Max Verstappen (F1)", score: 185 },
+      { name: "Michael Schumacher (F1)", score: 190 },
+      { name: "Sebastian Vettel (F1)", score: 195 },
+      { name: "Ayrton Senna (F1)", score: 200 },
+      { name: "Charles Leclerc (F1)", score: 205 },
+      { name: "Fernando Alonso (F1)", score: 210 },
+      { name: "Daniel Ricciardo (F1)", score: 215 },
+      { name: "Kimi Räikkönen (F1)", score: 220 },
+      { name: "Jenson Button (F1)", score: 225 },
+      { name: "Serena Williams (Tennis)", score: 230 },
+      { name: "Usain Bolt (Athlétisme)", score: 240 },
+      { name: "Lionel Messi (Football)", score: 245 },
+      { name: "Cristiano Ronaldo (Football)", score: 250 },
+      { name: "Simone Biles (Gymnastique)", score: 255 },
+      { name: "Roger Federer (Tennis)", score: 260 },
+      { name: "Michael Jordan (Basketball)", score: 265 },
+      { name: "Novak Djokovic (Tennis)", score: 270 },
+      { name: "LeBron James (Basketball)", score: 275 },
+      { name: "Tom Brady (Football US)", score: 280 },
+      { name: "Elon Musk", score: 350 },
+      { name: "Bill Gates", score: 360 },
+      { name: "Albert Einstein", score: 370 },
+      { name: "Mark Zuckerberg", score: 380 },
+      { name: "Steve Jobs", score: 390 },
+      { name: "Kanye West", score: 400 },
+      { name: "Beyoncé", score: 410 },
+      { name: "Taylor Swift", score: 420 },
+      { name: "Justin Bieber", score: 430 },
+      { name: "Adele", score: 440 },
+      // ... tu peux ajouter jusqu'à 100 entrées pour rendre ça plus complet
+    ];
 
+    // On garde max 100 entrées, dans cet exemple on a moins
+    const MAX_LEADERBOARD = 100;
+
+    // Référence éléments DOM
     const gameZone = document.getElementById('gameZone');
     const target = document.getElementById('target');
     const reactionTimeDisplay = document.getElementById('reactionTime');
-    const pseudoInput = document.getElementById('pseudo');
+    const scoresList = document.getElementById('scoresList');
+    const startBtn = document.getElementById('startBtn');
 
     let startTime = 0;
-    let waitingForClick = false;
     let timeoutId = null;
 
+    // Fonction pour démarrer le jeu
     function startGame() {
-      const pseudo = pseudoInput.value.trim();
-      if (!pseudo) return alert("Veuillez entrer un pseudo.");
-
-      clearTimeout(timeoutId);
+      startBtn.disabled = true;
+      reactionTimeDisplay.textContent = "Prépare-toi...";
+      target.style.backgroundColor = 'red';
       target.style.display = 'none';
-      reactionTimeDisplay.textContent = '-';
-      waitingForClick = false;
 
-      // délai aléatoire avant d'afficher le carré vert
+      // Délai aléatoire entre 2 et 5 secondes
       const delay = Math.random() * 3000 + 2000;
 
       timeoutId = setTimeout(() => {
-        // position aléatoire
-        const x = Math.random() * (gameZone.clientWidth - 50);
-        const y = Math.random() * (gameZone.clientHeight - 50);
+        // Position aléatoire dans gameZone
+        const x = Math.random() * (gameZone.clientWidth - target.clientWidth);
+        const y = Math.random() * (gameZone.clientHeight - target.clientHeight);
         target.style.left = x + 'px';
         target.style.top = y + 'px';
 
+        // Passe en vert, visible et start timer
         target.style.backgroundColor = 'green';
         target.style.display = 'block';
-
         startTime = performance.now();
-        waitingForClick = true;
+
+        reactionTimeDisplay.textContent = "Clique maintenant !";
       }, delay);
     }
 
-    target.addEventListener('click', async () => {
-      if (!waitingForClick) {
-        alert("Trop tôt ! Attendez que le carré devienne vert.");
-        return;
-      }
-
-      waitingForClick = false;
+    // Gestion clic sur cible
+    target.addEventListener('click', () => {
       const endTime = performance.now();
       const reaction = Math.round(endTime - startTime);
-      reactionTimeDisplay.textContent = reaction + ' ms';
+
+      if (startTime === 0) return; // Ignore clics hors du bon moment
+
+      reactionTimeDisplay.textContent = `Temps de réaction : ${reaction} ms`;
       target.style.display = 'none';
+      startBtn.disabled = false;
+      startTime = 0;
 
-      const pseudo = pseudoInput.value.trim();
-      if (!pseudo) return;
+      clearTimeout(timeoutId);
 
-      await saveScore(pseudo, reaction);
-      await loadLeaderboard();
-
-      // Propose de rejouer
-      setTimeout(() => {
-        if(confirm("Rejouer ?")) startGame();
-      }, 500);
+      // Ajoute ton score dans le classement local
+      addYourScore(reaction);
     });
 
-    async function saveScore(pseudo, score) {
-      const { error } = await supabase.from('scores').insert([{ pseudo, score }]);
-      if (error) console.error('Erreur insertion:', error);
-    }
+    // Fonction qui insère ton score dans le classement
+    function addYourScore(yourScore) {
+      // Clone la liste
+      let leaderboard = [...celebrities];
 
-    async function loadLeaderboard() {
-      const { data, error } = await supabase
-        .from('scores')
-        .select('*')
-        .order('score', { ascending: true })
-        .limit(100);
+      // Ajoute ton score fictif sous le nom "Toi"
+      leaderboard.push({ name: "Toi", score: yourScore });
 
-      const list = document.getElementById('scoresList');
-      list.innerHTML = '';
+      // Trie du plus rapide (plus petit) au plus lent
+      leaderboard.sort((a, b) => a.score - b.score);
 
-      if (error) {
-        console.error('Erreur chargement leaderboard:', error);
-        return;
+      // Limite à MAX_LEADERBOARD
+      if (leaderboard.length > MAX_LEADERBOARD) {
+        leaderboard = leaderboard.slice(0, MAX_LEADERBOARD);
       }
 
-      data.forEach(entry => {
+      // Affiche le classement avec ta position
+      displayLeaderboard(leaderboard);
+    }
+
+    // Fonction qui affiche le classement
+    function displayLeaderboard(list) {
+      scoresList.innerHTML = '';
+
+      list.forEach((entry, index) => {
         const li = document.createElement('li');
-        li.textContent = `${entry.pseudo} — ${entry.score} ms`;
-        list.appendChild(li);
+
+        // Si c'est toi, on souligne / met en valeur
+        if (entry.name === "Toi") {
+          li.innerHTML = `<span class="your-rank">${index + 1}. ${entry.name} — ${entry.score} ms</span>`;
+        } else {
+          li.textContent = `${index + 1}. ${entry.name} — ${entry.score} ms`;
+        }
+
+        scoresList.appendChild(li);
       });
     }
 
-    // Charge le leaderboard au chargement de la page
-    loadLeaderboard();
+    // Au chargement, on affiche classement de base sans toi
+    displayLeaderboard(celebrities);
+
+    // Bouton démarre le jeu
+    startBtn.addEventListener('click', startGame);
   </script>
 </body>
 </html>
