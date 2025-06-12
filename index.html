@@ -10,16 +10,15 @@
     #gameZone { margin: 20px auto; border: 2px solid #000; width: 300px; height: 300px; position: relative; background: #f0f0f0; }
     #target { width: 50px; height: 50px; background: red; position: absolute; border-radius: 50%; display: none; cursor: pointer; }
     #leaderboard { margin-top: 40px; }
-    .ad-space { margin: 20px 0; padding: 10px; background: #f9f9f9; }
+    .ad-space { margin: 20px 0; padding: 10px; background: #f9f9f9; min-height: 100px; }
   </style>
 </head>
 <body>
   <h1>⚡ Jeu de Réflexe</h1>
 
   <div class="ad-space">
-    <!-- Code AdSense exemple -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx"
-     crossorigin="anonymous"></script>
+    <!-- Bloc publicitaire AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
     <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
@@ -37,9 +36,8 @@
   <h2>Temps de réaction : <span id="reactionTime">-</span> ms</h2>
 
   <div class="ad-space">
-    <!-- Deuxième bloc pub -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx"
-     crossorigin="anonymous"></script>
+    <!-- Bloc publicitaire AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
     <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="0987654321" data-ad-format="auto" data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
@@ -56,34 +54,41 @@
 
     const gameZone = document.getElementById('gameZone');
     const target = document.getElementById('target');
+    const reactionTimeDisplay = document.getElementById('reactionTime');
+    const pseudoInput = document.getElementById('pseudo');
     let startTime = 0;
 
     async function startGame() {
-      const pseudo = document.getElementById('pseudo').value.trim();
+      const pseudo = pseudoInput.value.trim();
       if (!pseudo) return alert("Veuillez entrer un pseudo.");
 
-      document.getElementById('reactionTime').textContent = '-';
       target.style.display = 'none';
+      reactionTimeDisplay.textContent = '-';
 
-      // Attente aléatoire avant d'afficher la cible
       const delay = Math.random() * 3000 + 2000; // entre 2 et 5 sec
+
       setTimeout(() => {
-        const x = Math.random() * 250;
-        const y = Math.random() * 250;
+        const x = Math.random() * (gameZone.clientWidth - 50);
+        const y = Math.random() * (gameZone.clientHeight - 50);
         target.style.left = x + 'px';
         target.style.top = y + 'px';
         target.style.display = 'block';
         startTime = performance.now();
       }, delay);
-
-      target.onclick = async () => {
-        const reaction = Math.round(performance.now() - startTime);
-        document.getElementById('reactionTime').textContent = reaction;
-        target.style.display = 'none';
-        await saveScore(pseudo, reaction);
-        loadLeaderboard();
-      };
     }
+
+    target.addEventListener('click', async () => {
+      const endTime = performance.now();
+      const reaction = Math.round(endTime - startTime);
+      reactionTimeDisplay.textContent = reaction + ' ms';
+      target.style.display = 'none';
+
+      const pseudo = pseudoInput.value.trim();
+      if (!pseudo) return;
+
+      await saveScore(pseudo, reaction);
+      await loadLeaderboard();
+    });
 
     async function saveScore(pseudo, score) {
       const { error } = await supabase.from('scores').insert([{ pseudo, score }]);
@@ -99,7 +104,13 @@
 
       const list = document.getElementById('scoresList');
       list.innerHTML = '';
-      data.forEach((entry) => {
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      data.forEach(entry => {
         const li = document.createElement('li');
         li.textContent = `${entry.pseudo} — ${entry.score} ms`;
         list.appendChild(li);
