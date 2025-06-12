@@ -6,157 +6,204 @@
   <title>Jeu de Réflexe - Classement local</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    #gameZone { margin: 20px auto; border: 2px solid #000; width: 300px; height: 300px; position: relative; background: #f0f0f0; }
-    #target { width: 50px; height: 50px; background: red; position: absolute; border-radius: 50%; display: none; cursor: pointer; }
-    #leaderboard { margin-top: 40px; }
-    .ad-space { margin: 20px 0; padding: 10px; background: #f9f9f9; min-height: 100px; }
+    #gameZone {
+      margin: 20px auto;
+      border: 2px solid #000;
+      width: 300px;
+      height: 300px;
+      position: relative;
+      background: #f0f0f0;
+      cursor: pointer;
+      user-select: none;
+    }
+    #target {
+      width: 50px;
+      height: 50px;
+      background: green;
+      position: absolute;
+      border-radius: 4px;
+      display: none;
+    }
+    #leaderboard {
+      margin-top: 40px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    .ad-space {
+      margin: 20px auto;
+      padding: 10px;
+      background: #f9f9f9;
+      min-height: 100px;
+      max-width: 320px;
+    }
   </style>
 </head>
 <body>
+
   <h1>⚡ Jeu de Réflexe</h1>
 
-  <div class="ad-space">
-    <!-- Bloc publicitaire AdSense (en haut de page) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="1111111111" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <!-- ENCADRE PUBLICITAIRE - ici tu colles le code fourni par Google AdSense -->
+  <div class="ad-space" id="ad-top">
+    <!-- Exemple : -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+      crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
+      data-ad-slot="1234567890"
+      data-ad-format="auto"
+      data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
 
   <div>
     <label for="pseudo">Entrez votre pseudo :</label>
-    <input type="text" id="pseudo" />
+    <input type="text" id="pseudo" placeholder="Votre pseudo" />
     <button onclick="startGame()">Commencer</button>
   </div>
 
-  <div class="ad-space">
-    <!-- Bloc publicitaire AdSense (entre pseudo et jeu) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="2222222222" data-ad-format="auto" data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-  </div>
-
-  <div id="gameZone">
+  <div id="gameZone" title="Clique dès que le carré vert apparaît!">
     <div id="target"></div>
   </div>
 
   <h2>Temps de réaction : <span id="reactionTime">-</span> ms</h2>
 
-  <div class="ad-space">
-    <!-- Bloc publicitaire AdSense (entre jeu et classement) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="3333333333" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <!-- ENCADRE PUBLICITAIRE - deuxième emplacement -->
+  <div class="ad-space" id="ad-bottom">
+    <!-- Même principe, tu colles ici un autre code AdSense différent si tu veux -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+      crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
+      data-ad-slot="0987654321"
+      data-ad-format="auto"
+      data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
 
   <div id="leaderboard">
-    <h2>🏆 Top 100 (Célébrités + Toi)</h2>
+    <h2>🏆 Classement local (célébrités + toi)</h2>
     <ol id="scoresList"></ol>
   </div>
 
-  <script>
-    const gameZone = document.getElementById('gameZone');
-    const target = document.getElementById('target');
-    const reactionTimeDisplay = document.getElementById('reactionTime');
-    const pseudoInput = document.getElementById('pseudo');
+<script>
+  // Données fixes : célébrités avec leurs scores (temps en ms)
+  const celebrities = [
+    {pseudo: 'Lewis Hamilton', score: 450},
+    {pseudo: 'Serena Williams', score: 480},
+    {pseudo: 'Michael Jordan', score: 520},
+    {pseudo: 'Usain Bolt', score: 430},
+    {pseudo: 'Marie Curie', score: 650},
+    {pseudo: 'Albert Einstein', score: 700},
+    {pseudo: 'Beyoncé', score: 600},
+    {pseudo: 'Cristiano Ronaldo', score: 500},
+    {pseudo: 'Simone Biles', score: 470},
+    {pseudo: 'Elon Musk', score: 720},
+    // Ajoute autant que tu veux
+  ];
 
-    let startTime = 0;
+  const pseudoInput = document.getElementById('pseudo');
+  const gameZone = document.getElementById('gameZone');
+  const target = document.getElementById('target');
+  const reactionTimeDisplay = document.getElementById('reactionTime');
+  const scoresList = document.getElementById('scoresList');
 
-    // Gestion du meilleur score en localStorage
-    function getBestScore() {
-      return localStorage.getItem('bestReactionTime')
-        ? parseInt(localStorage.getItem('bestReactionTime'), 10)
-        : null;
+  let startTime = 0;
+  let timeoutId = null;
+  let currentUserBestScore = null;
+
+  // Fonction pour démarrer le jeu
+  function startGame() {
+    const pseudo = pseudoInput.value.trim();
+    if (!pseudo) {
+      alert('Veuillez entrer un pseudo.');
+      return;
     }
 
-    function saveBestScore(score) {
-      localStorage.setItem('bestReactionTime', score.toString());
+    reactionTimeDisplay.textContent = '-';
+    target.style.display = 'none';
+
+    // On récupère le meilleur score du joueur dans localStorage s'il existe
+    const savedScore = localStorage.getItem('bestScore_' + pseudo.toLowerCase());
+    currentUserBestScore = savedScore ? parseInt(savedScore, 10) : null;
+
+    // Cache le carré au début et lance l'attente aléatoire
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      // Position aléatoire du carré dans la zone de jeu
+      const maxX = gameZone.clientWidth - target.offsetWidth;
+      const maxY = gameZone.clientHeight - target.offsetHeight;
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+
+      target.style.left = x + 'px';
+      target.style.top = y + 'px';
+      target.style.display = 'block';
+
+      startTime = performance.now();
+    }, Math.random() * 3000 + 2000); // délai 2 à 5 secondes
+  }
+
+  // Quand on clique sur le carré vert
+  target.addEventListener('click', () => {
+    const endTime = performance.now();
+    const reaction = Math.round(endTime - startTime);
+
+    reactionTimeDisplay.textContent = reaction + ' ms';
+    target.style.display = 'none';
+
+    const pseudo = pseudoInput.value.trim();
+    if (!pseudo) return;
+
+    // Met à jour le meilleur score localement si le score actuel est meilleur (plus petit)
+    if (currentUserBestScore === null || reaction < currentUserBestScore) {
+      currentUserBestScore = reaction;
+      localStorage.setItem('bestScore_' + pseudo.toLowerCase(), currentUserBestScore);
     }
 
-    const MAX_LEADERBOARD = 100;
+    updateLeaderboard(pseudo, currentUserBestScore);
+  });
 
-    // Liste prédéfinie de célébrités avec scores (en ms)
-    const celebrities = [
-      { name: "Michael Schumacher", score: 150 },
-      { name: "Lewis Hamilton", score: 140 },
-      { name: "Sebastian Vettel", score: 160 },
-      { name: "Ayrton Senna", score: 130 },
-      { name: "Valentino Rossi", score: 170 },
-      { name: "Usain Bolt", score: 120 },
-      { name: "Serena Williams", score: 155 },
-      { name: "Simone Biles", score: 165 },
-      { name: "Tony Hawk", score: 180 },
-      { name: "Toi", score: getBestScore() || 9999 },
-    ];
+  // Met à jour le classement local et l'affiche
+  function updateLeaderboard(userPseudo, userScore) {
+    // On crée une copie du tableau des célébrités
+    const list = [...celebrities];
 
-    // Affiche le classement dans le HTML
-    function displayLeaderboard(leaderboard) {
-      const list = document.getElementById('scoresList');
-      list.innerHTML = '';
-
-      leaderboard.forEach(entry => {
-        const li = document.createElement('li');
-        li.textContent = `${entry.name} — ${entry.score} ms`;
-        list.appendChild(li);
-      });
+    // Ajoute/Remplace la ligne "Toi" avec ton meilleur score
+    const toiIndex = list.findIndex(item => item.pseudo === 'Toi');
+    if (toiIndex !== -1) {
+      // Met à jour seulement si meilleur score (on le fait toujours car on stocke déjà la meilleure)
+      list[toiIndex].score = userScore;
+    } else {
+      list.push({pseudo: 'Toi (' + userPseudo + ')', score: userScore});
     }
 
-    // Ajoute ou met à jour ton score, en gardant le meilleur
-    function addYourScore(newScore) {
-      const bestScore = getBestScore();
+    // Trie par score croissant (meilleur temps en haut)
+    list.sort((a, b) => a.score - b.score);
 
-      if (bestScore === null || newScore < bestScore) {
-        saveBestScore(newScore);
-      }
-
-      const effectiveScore = getBestScore();
-
-      let leaderboard = celebrities.filter(c => c.name !== "Toi");
-      leaderboard.push({ name: "Toi", score: effectiveScore });
-
-      leaderboard.sort((a, b) => a.score - b.score);
-
-      if (leaderboard.length > MAX_LEADERBOARD) {
-        leaderboard = leaderboard.slice(0, MAX_LEADERBOARD);
-      }
-
-      displayLeaderboard(leaderboard);
-    }
-
-    // Démarre le jeu
-    function startGame() {
-      const pseudo = pseudoInput.value.trim();
-      if (!pseudo) return alert("Veuillez entrer un pseudo.");
-
-      target.style.display = 'none';
-      reactionTimeDisplay.textContent = '-';
-
-      const delay = Math.random() * 3000 + 2000; // 2 à 5 secondes
-
-      setTimeout(() => {
-        const x = Math.random() * (gameZone.clientWidth - 50);
-        const y = Math.random() * (gameZone.clientHeight - 50);
-        target.style.left = x + 'px';
-        target.style.top = y + 'px';
-        target.style.backgroundColor = 'green'; // devient vert
-        target.style.display = 'block';
-        startTime = performance.now();
-      }, delay);
-    }
-
-    // Quand on clique sur le carré vert
-    target.addEventListener('click', () => {
-      const endTime = performance.now();
-      const reaction = Math.round(endTime - startTime);
-      reactionTimeDisplay.textContent = reaction + ' ms';
-      target.style.display = 'none';
-
-      addYourScore(reaction);
+    // Affiche la liste dans le DOM
+    scoresList.innerHTML = '';
+    list.forEach(({pseudo, score}, i) => {
+      const li = document.createElement('li');
+      li.textContent = `${pseudo} — ${score} ms`;
+      scoresList.appendChild(li);
     });
+  }
 
-    // Affiche le classement au chargement
-    window.onload = () => {
-      addYourScore(getBestScore() || 9999);
-    };
-  </script>
+  // Au chargement, on affiche le classement avec le score de l’utilisateur s’il est dans localStorage
+  window.onload = () => {
+    const pseudo = pseudoInput.value.trim();
+    let userBest = null;
+    if (pseudo) {
+      const savedScore = localStorage.getItem('bestScore_' + pseudo.toLowerCase());
+      userBest = savedScore ? parseInt(savedScore, 10) : null;
+    }
+    updateLeaderboard('Toi', userBest ?? 99999); // met un score très haut si pas de score utilisateur
+  };
+</script>
+
 </body>
 </html>
