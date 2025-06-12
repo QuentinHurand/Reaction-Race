@@ -2,13 +2,29 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reflex Speed Game</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    #gameZone { margin: 20px auto; border: 2px solid #000; width: 300px; height: 300px; position: relative; background: #f0f0f0; }
-    #target { width: 50px; height: 50px; background: red; position: absolute; border-radius: 50%; display: none; cursor: pointer; }
+    #gameZone {
+      margin: 20px auto;
+      border: 2px solid #000;
+      width: 300px;
+      height: 300px;
+      position: relative;
+      background: #f0f0f0;
+      user-select: none;
+    }
+    #target {
+      width: 50px;
+      height: 50px;
+      position: absolute;
+      display: none;
+      cursor: pointer;
+      border-radius: 5px;
+      background-color: red;
+    }
     #leaderboard { margin-top: 40px; }
     .ad-space { margin: 20px 0; padding: 10px; background: #f9f9f9; min-height: 100px; }
   </style>
@@ -19,7 +35,12 @@
   <div class="ad-space">
     <!-- Bloc publicitaire AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
+         data-ad-slot="1234567890"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
 
@@ -38,7 +59,12 @@
   <div class="ad-space">
     <!-- Bloc publicitaire AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="0987654321" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
+         data-ad-slot="0987654321"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
 
@@ -56,28 +82,45 @@
     const target = document.getElementById('target');
     const reactionTimeDisplay = document.getElementById('reactionTime');
     const pseudoInput = document.getElementById('pseudo');
-    let startTime = 0;
 
-    async function startGame() {
+    let startTime = 0;
+    let waitingForClick = false;
+    let timeoutId = null;
+
+    function startGame() {
       const pseudo = pseudoInput.value.trim();
       if (!pseudo) return alert("Veuillez entrer un pseudo.");
 
+      clearTimeout(timeoutId);
       target.style.display = 'none';
       reactionTimeDisplay.textContent = '-';
+      waitingForClick = false;
 
-      const delay = Math.random() * 3000 + 2000; // entre 2 et 5 sec
+      // délai aléatoire avant d'afficher le carré vert
+      const delay = Math.random() * 3000 + 2000;
 
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
+        // position aléatoire
         const x = Math.random() * (gameZone.clientWidth - 50);
         const y = Math.random() * (gameZone.clientHeight - 50);
         target.style.left = x + 'px';
         target.style.top = y + 'px';
+
+        target.style.backgroundColor = 'green';
         target.style.display = 'block';
+
         startTime = performance.now();
+        waitingForClick = true;
       }, delay);
     }
 
     target.addEventListener('click', async () => {
+      if (!waitingForClick) {
+        alert("Trop tôt ! Attendez que le carré devienne vert.");
+        return;
+      }
+
+      waitingForClick = false;
       const endTime = performance.now();
       const reaction = Math.round(endTime - startTime);
       reactionTimeDisplay.textContent = reaction + ' ms';
@@ -88,11 +131,16 @@
 
       await saveScore(pseudo, reaction);
       await loadLeaderboard();
+
+      // Propose de rejouer
+      setTimeout(() => {
+        if(confirm("Rejouer ?")) startGame();
+      }, 500);
     });
 
     async function saveScore(pseudo, score) {
       const { error } = await supabase.from('scores').insert([{ pseudo, score }]);
-      if (error) console.error(error);
+      if (error) console.error('Erreur insertion:', error);
     }
 
     async function loadLeaderboard() {
@@ -106,7 +154,7 @@
       list.innerHTML = '';
 
       if (error) {
-        console.error(error);
+        console.error('Erreur chargement leaderboard:', error);
         return;
       }
 
@@ -117,6 +165,7 @@
       });
     }
 
+    // Charge le leaderboard au chargement de la page
     loadLeaderboard();
   </script>
 </body>
